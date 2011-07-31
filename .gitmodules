@@ -1,0 +1,3 @@
+[submodule "ZenGarden"]
+	path = ZenGarden
+	url = git://github.com/mhroth/ZenGarden.git

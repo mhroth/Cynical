@@ -1,0 +1,35 @@
+#! -*- python -*-
+#
+# Copyright (c) 2011 The Native Client Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import make_nacl_env
+import nacl_utils
+import os
+import fnmatch
+
+# http://code.activestate.com/recipes/499305-locating-files-throughout-a-directory-tree/
+def locate(pattern, root=os.curdir):
+    '''Locate all files matching supplied filename pattern in the supplied root directory.'''
+    files = os.listdir(os.path.abspath(root))
+    for filename in fnmatch.filter(files, pattern):
+        yield filename
+
+nacl_env = make_nacl_env.NaClEnvironment(use_c_plus_plus_libs=True)
+nacl_env.Append(
+    # Add a CPPPATH that enables the full-path #include directives, such as
+    # #include "examples/sine_synth/sine_synth.h"
+    CPPPATH=['../ZenGarden/src'],
+    # Strict ANSI compliance.
+    EXTRA_CCFLAGS=['-I../ZenGarden/src', '-pedantic', '-w', '-D__APPLE__=0'],
+   )
+
+sources = ['zgnacl.cpp']
+zgsources = [x for x in locate("*.cpp", "../ZenGarden/src")]
+zgsources("main.cpp") # do not consider main.cpp
+sources.extend(zgsources) # concatinate the two source vectors
+
+nacl_env.AllNaClModules(sources, 'zgnacl')
+
+Repository('../ZenGarden/src')
