@@ -1,4 +1,4 @@
-/// @file zgnacl.cc
+/// @file zgnacl.cpp
 /// This example demonstrates loading, running and scripting a very simple NaCl
 /// module.  To load the NaCl module, the browser first looks for the
 /// CreateModule() factory method (at the end of this file).  It calls
@@ -22,9 +22,20 @@
 
 #include <cstdio>
 #include <string>
+#include "ppapi/cpp/audio.h"
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
+
+#include "ZenGarden.h"
+
+#define kPlaySoundId "playSound"
+#define kStopSoundId "stopSound"
+#define kMessageArgumentSeparator ':'
+
+#define kSampleFrameCount 512 // The sample count we will request.
+#define kNumInputChannels 2
+#define kNumOutputChannels 2
 
 // Note to the user: This glue code reflects the current state of affairs.  It
 // may change.  In particular, interface elements marked as deprecated will
@@ -48,6 +59,12 @@ class ZgnaclInstance : public pp::Instance {
   explicit ZgnaclInstance(PP_Instance instance) : pp::Instance(instance)
   {}
   virtual ~ZgnaclInstance() {}
+  
+  // Called by the browser once the NaCl module is loaded and ready to
+  // initialize.  Creates a Pepper audio context and initializes it. Returns
+  // true on success.  Returning false causes the NaCl module to be deleted and
+  // no other functions to be called.
+  virtual bool Init(uint32_t argc, const char* argn[], const char* argv[]);
 
   /// Handler for messages coming in from the browser via postMessage().  The
   /// @a var_message can contain anything: a JSON string; a string that encodes
@@ -60,10 +77,122 @@ class ZgnaclInstance : public pp::Instance {
   /// retrieve the method name, match it to a function call, and then call it
   /// with the parameter.
   /// @param[in] var_message The message posted by the browser.
-  virtual void HandleMessage(const pp::Var& var_message) {
-    // TODO(sdk_user): 1. Make this function handle the incoming message.
+  virtual void HandleMessage(const pp::Var& var_message);
+  
+  // property accessor
+  ZGContext *zgContext() const { return zgContext_; }
+  
+  // property accessor
+  uint32_t blockSize() const { return blockSize_; }
+  
+ private:
+  static void ZenGardenCallback(void* samples, uint32_t buffer_size, void* data) {
+    ZgnaclInstance* zgnaclInstance = reinterpret_cast<ZgnaclInstance*>(data);
+    
+    // samples are channel interleaved shorts
+    short *buffer = (short *) samples;
+    
+    int blockSize = zgnaclInstance->blockSize();
+    int inputBufferLength = buffer_size; //kNumInputChannels * blockSize_;
+    int outputBufferLength = buffer_size; //kNumOutputChannels * blockSize_;
+    float finputBuffer[inputBufferLength];
+    float foutputBuffer[outputBufferLength];
+    
+    // uninterleave and short->float the samples in cinputBuffer to finputBuffer
+    switch (kNumInputChannels) {
+      default: {
+        for (int k = 2; k < kNumInputChannels; k++) {
+          for (int i = k, j = k*blockSize; i < inputBufferLength; i+=kNumInputChannels, j++) {
+            finputBuffer[j] = ((float) buffer[i]) / 32768.0f;
+          }
+        } // allow fallthrough
+      }
+      case 2: {
+        for (int i = 1, j = blockSize; i < inputBufferLength; i+=kNumInputChannels, j++) {
+          finputBuffer[j] = ((float) buffer[i]) / 32768.0f;
+        }  // allow fallthrough
+      }
+      case 1: {
+        for (int i = 0, j = 0; i < inputBufferLength; i+=kNumInputChannels, j++) {
+          finputBuffer[j] = ((float) buffer[i]) / 32768.0f;
+        } // allow fallthrough
+      }
+      case 0: break;
+    }
+    
+    zg_context_process(zgnaclInstance->zgContext(), finputBuffer, foutputBuffer);
+    
+    // clip the output to [-1,1]
+    for (int i = 0; i < outputBufferLength; i++) {
+      float f = foutputBuffer[i];
+      if (f < -1.0f) f = -1.0f;
+      else if (f > 1.0f) f = 1.0f;
+      foutputBuffer[i] = f;
+    }
+    
+    // interleave and float->short the samples in finputBuffer to cinputBuffer
+    switch (kNumOutputChannels) {
+      default: {
+        for (int k = 2; k < kNumOutputChannels; k++) {
+          for (int i = k, j = k*blockSize; i < outputBufferLength; i+=kNumOutputChannels, j++) {
+            buffer[i] = (short) (foutputBuffer[j] * 32767.0f);
+          }
+        } // allow fallthrough
+      }
+      case 2: {
+        for (int i = 1, j = blockSize; i < outputBufferLength; i+=kNumOutputChannels, j++) {
+          buffer[i] = (short) (foutputBuffer[j] * 32767.0f);
+        } // allow fallthrough
+      }
+      case 1: {
+        for (int i = 0, j = 0; i < outputBufferLength; i+=kNumOutputChannels, j++) {
+          buffer[i] = (short) (foutputBuffer[j] * 32767.0f);
+        } // allow fallthrough
+      }
+      case 0: break;
+    }
   }
+  
+  pp::Audio audio_;
+  
+  // The count of sample frames per channel in an audio buffer.
+  uint32_t blockSize_;
+  
+  ZGContext *zgContext_;
 };
+
+bool ZgnaclInstance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
+  
+  // Ask the device for an appropriate sample count size.
+  blockSize_ = pp::AudioConfig::RecommendSampleFrameCount(PP_AUDIOSAMPLERATE_44100, kSampleFrameCount);
+  audio_ = pp::Audio(this, pp::AudioConfig(this, PP_AUDIOSAMPLERATE_44100, blockSize_),
+      ZenGardenCallback, this);
+  
+  zgContext_ = zg_context_new(kNumInputChannels, kNumOutputChannels, blockSize_, 44100.0f, NULL, NULL);
+  return true;
+}
+
+// Called by the browser to handle the postMessage() call in Javascript.
+// |var_message| is expected to be a string that contains the name of the
+// method to call.  Note that the setFrequency method takes a single
+// parameter, the frequency.  The frequency parameter is encoded as a string
+// and appended to the 'setFrequency' method name after a ':'.  Examples
+// of possible message strings are:
+//     playSound
+//     stopSound
+//     setFrequency:880
+// If |var_message| is not a recognized method name, this method does nothing.
+void ZgnaclInstance::HandleMessage(const pp::Var& var_message) {
+  if (!var_message.is_string()) {
+    return;
+  }
+  std::string message = var_message.AsString();
+  if (message == kPlaySoundId) {
+    audio_.StartPlayback();
+  } else if (message == kStopSoundId) {
+    audio_.StopPlayback();
+  }
+}
 
 /// The Module class.  The browser calls the CreateInstance() method to create
 /// an instance of your NaCl module on the web page.  The browser creates a new
