@@ -4,3 +4,5 @@ dbg_x86_32/
 dbg_x86_64/
 .sconsign.dblite
 .DS_Store
+*.nexe
+*.nmf

@@ -27,7 +27,7 @@ nacl_env.Append(
 
 sources = ['zgnacl.cpp']
 zgsources = [x for x in locate("*.cpp", "../ZenGarden/src")]
-zgsources("main.cpp") # do not consider main.cpp
+zgsources.remove("main.cpp") # do not consider main.cpp
 sources.extend(zgsources) # concatinate the two source vectors
 
 nacl_env.AllNaClModules(sources, 'zgnacl')
