@@ -24,6 +24,9 @@ Native Client docs
 ------------------
 
 http://code.google.com/p/nativeclient/
+
 http://www.chromium.org/nativeclient/native-client-documentation-index
+
 http://code.google.com/chrome/nativeclient/
+
 http://code.google.com/chrome/nativeclient/docs/technical_overview.html
