@@ -52,11 +52,22 @@
         statusField.innerHTML = statusText;
       }
     }
+    
+    function toggleSound(flag) {
+      if (flag) {
+        ZgnaclModule.postMessage('playSound');
+      } else {
+        ZgnaclModule.postMessage('stopSound');
+      }
+    }
   </script>
 </head>
 <body onload="pageDidLoad()">
 
-<h1>Native Client Module Zgnacl</h1>
+<h1>Native Client Module ZGNaCl (Cynical)</h1>
+<p>Click the button to start and stop the sine wave playing.</p>
+<button onclick="toggleSound(true)">Play</button>
+<button onclick="toggleSound(false)">Stop</button>
 <p>
   <!-- Load the published .nexe.  This includes the 'nacl' attribute which
   shows how to load multi-architecture modules.  Each entry in the "nexes"
