@@ -60,6 +60,10 @@
         ZgnaclModule.postMessage('stopSound');
       }
     }
+    
+    function info() {
+      ZgnaclModule.postMessage('info');
+    }
   </script>
 </head>
 <body onload="pageDidLoad()">
@@ -68,6 +72,7 @@
 <p>Click the button to start and stop the sine wave playing.</p>
 <button onclick="toggleSound(true)">Play</button>
 <button onclick="toggleSound(false)">Stop</button>
+<button onclick="info()">Info</button>
 <p>
   <!-- Load the published .nexe.  This includes the 'nacl' attribute which
   shows how to load multi-architecture modules.  Each entry in the "nexes"

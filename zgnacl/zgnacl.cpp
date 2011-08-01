@@ -28,6 +28,9 @@
 #include "ppapi/cpp/var.h"
 
 #include "ZenGarden.h"
+#include "ZGCallbackFunction.h"
+
+using namespace std;
 
 #define kPlaySoundId "playSound"
 #define kStopSoundId "stopSound"
@@ -36,6 +39,10 @@
 #define kSampleFrameCount 512 // The sample count we will request.
 #define kNumInputChannels 2
 #define kNumOutputChannels 2
+
+extern "C" {
+  extern void zgCallbackFunction(ZGCallbackFunction, void *, void *);
+}
 
 // Note to the user: This glue code reflects the current state of affairs.  It
 // may change.  In particular, interface elements marked as deprecated will
@@ -168,7 +175,18 @@ bool ZgnaclInstance::Init(uint32_t argc, const char* argn[], const char* argv[])
   audio_ = pp::Audio(this, pp::AudioConfig(this, PP_AUDIOSAMPLERATE_44100, blockSize_),
       ZenGardenCallback, this);
   
-  zgContext_ = zg_context_new(kNumInputChannels, kNumOutputChannels, blockSize_, 44100.0f, NULL, NULL);
+  zgContext_ = zg_context_new(kNumInputChannels, kNumOutputChannels, blockSize_, 44100.0f, zgCallbackFunction, this);
+  
+  // construct a very basic osc~ graph. Only for testing.
+  ZGGraph *zgGraph = zg_context_new_empty_graph(zgContext_);
+  ZGObject *zgOscObject = zg_graph_new_object(zgGraph, "osc~ 440");
+  zg_graph_add_object(zgGraph, zgOscObject, 0.0f, 0.0f);
+  ZGObject *zgDacObject = zg_graph_new_object(zgGraph, "dac~");
+  zg_graph_add_object(zgGraph, zgDacObject, 0.0f, 0.0f);
+  zg_graph_add_connection(zgGraph, zgOscObject, 0, zgDacObject, 0);
+  zg_graph_add_connection(zgGraph, zgOscObject, 0, zgDacObject, 1);
+  zg_graph_attach(zgGraph);
+  
   return true;
 }
 
@@ -191,6 +209,14 @@ void ZgnaclInstance::HandleMessage(const pp::Var& var_message) {
     audio_.StartPlayback();
   } else if (message == kStopSoundId) {
     audio_.StopPlayback();
+  } else if (message == "info") {
+    // NOTE(mhroth): temporary for testing
+    char stringBuffer[32];
+    snprintf(stringBuffer, 32, "blocksize: %i", blockSize_);
+    zgCallbackFunction(ZG_PRINT_STD, this, stringBuffer);
+  } else {
+    // if we mess something up, return the input
+    PostMessage(var_message);
   }
 }
 
@@ -220,3 +246,26 @@ Module* CreateModule() {
   return new ZgnaclModule();
 }
 }  // namespace pp
+
+// just post everything that comes out of ZenGarden to the browser
+extern "C" {
+  void zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr) {
+    switch (function) {
+      case ZG_PRINT_STD: {
+        ZgnaclInstance *zgnaclInstance = (ZgnaclInstance *) userData;
+        zgnaclInstance->PostMessage((const char *) ptr);
+        break;
+      }
+      case ZG_PRINT_ERR: {
+        ZgnaclInstance *zgnaclInstance = (ZgnaclInstance *) userData;
+        string errorStr = string("ERROR: ");
+        string str = string((const char *) ptr);
+        zgnaclInstance->PostMessage(pp::Var(errorStr + str));
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+  }
+};
