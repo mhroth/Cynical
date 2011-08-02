@@ -4,7 +4,7 @@ Cynical
 Overview
 --------
 
-Cynical is a Native Client (NaCl) wrapper for the ZenGarden Pure Data (Pd) runtime. It allows Pd patches to be run in the Chrome webbrowser and exposes a rich JavaScript API for creating, querying, and modifying to modify them in real time.
+Cynical is a Native Client (NaCl) wrapper for the ZenGarden Pure Data (Pd) runtime. It allows Pd patches to be run in the Chrome webbrowser and exposes a rich JavaScript API for creating, querying, and modifying them in real time.
 
 How to Get Started
 ------------------
