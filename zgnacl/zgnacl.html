@@ -64,22 +64,6 @@
     function info() {
       ZgnaclModule.postMessage('info');
     }
-    
-    function sendMessage(receiverName, timestamp) {
-      // at least one element must be supplied as the contents of the message
-      if (arguments.length < 3) return;
-    
-      // turn message into a string and send it to ZgnaclModule
-      var sendString = 'sendMessage:'+receiverName+':'+timestamp;
-      for (var i = 2; i < arguments.length; i++) {
-        sendString += ':' + arguments[i];
-      }
-      ZgnaclModule.postMessage(sendString);
-    }
-    
-    function addNewGraphFromFile(filepath) {
-      ZgnaclModule.postMessage('addNewGraphFromFile:'+filepath);
-    }
   </script>
 </head>
 <body onload="pageDidLoad()">
@@ -87,7 +71,7 @@
 <h1>Native Client Module ZGNaCl (Cynical)</h1>
 <p>In order to run this demo you must:<br/>
 <ul>
-<li>Be running at least <a href="http://www.chromium.org/getting-involved/dev-channel">Chrome v14</a> for Mac.</li>
+<li>Be running at least <a href="http://www.chromium.org/getting-involved/dev-channel">Chrome v13</a> for Mac.</li>
 <li>Enable <a href="http://code.google.com/chrome/nativeclient/docs/technical_overview.html">Native Client</a> support in <a href="chrome://flags/">about:flags</a>.</li>
 <li>Enable the Native Client plugin in <a href="chrome://plugins/">about:plugins</a>.</li>
 </ul></p>
@@ -95,8 +79,6 @@
 <button onclick="toggleSound(true)">Play</button>
 <button onclick="toggleSound(false)">Stop</button>
 <button onclick="info()">Info</button>
-<button onclick="sendMessage('hello', 0.0, 1)">Send Message</button>
-<button onclick="addNewGraphFromFile('/Users/mhroth/Desktop/2osc.pd')">New Graph</button>
 <p>
   <!-- Load the published .nexe.  This includes the 'nacl' attribute which
   shows how to load multi-architecture modules.  Each entry in the "nexes"

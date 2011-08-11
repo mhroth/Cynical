@@ -99,7 +99,65 @@ class ZgnaclInstance : public pp::Instance {
     // samples are channel interleaved shorts
     short *buffer = (short *) samples;
     
-    zg_context_process_s(zgnaclInstance->zgContext(), buffer, buffer);
+    int blockSize = zgnaclInstance->blockSize();
+    int inputBufferLength = buffer_size; //kNumInputChannels * blockSize_;
+    int outputBufferLength = buffer_size; //kNumOutputChannels * blockSize_;
+    float finputBuffer[inputBufferLength];
+    float foutputBuffer[outputBufferLength];
+    
+    // uninterleave and short->float the samples in cinputBuffer to finputBuffer
+    switch (kNumInputChannels) {
+      default: {
+        for (int k = 2; k < kNumInputChannels; k++) {
+          for (int i = k, j = k*blockSize; i < inputBufferLength; i+=kNumInputChannels, j++) {
+            finputBuffer[j] = ((float) buffer[i]) / 32768.0f;
+          }
+        } // allow fallthrough
+      }
+      case 2: {
+        for (int i = 1, j = blockSize; i < inputBufferLength; i+=kNumInputChannels, j++) {
+          finputBuffer[j] = ((float) buffer[i]) / 32768.0f;
+        }  // allow fallthrough
+      }
+      case 1: {
+        for (int i = 0, j = 0; i < inputBufferLength; i+=kNumInputChannels, j++) {
+          finputBuffer[j] = ((float) buffer[i]) / 32768.0f;
+        } // allow fallthrough
+      }
+      case 0: break;
+    }
+    
+    zg_context_process(zgnaclInstance->zgContext(), finputBuffer, foutputBuffer);
+    
+    // clip the output to [-1,1]
+    for (int i = 0; i < outputBufferLength; i++) {
+      float f = foutputBuffer[i];
+      if (f < -1.0f) f = -1.0f;
+      else if (f > 1.0f) f = 1.0f;
+      foutputBuffer[i] = f;
+    }
+    
+    // interleave and float->short the samples in finputBuffer to cinputBuffer
+    switch (kNumOutputChannels) {
+      default: {
+        for (int k = 2; k < kNumOutputChannels; k++) {
+          for (int i = k, j = k*blockSize; i < outputBufferLength; i+=kNumOutputChannels, j++) {
+            buffer[i] = (short) (foutputBuffer[j] * 32767.0f);
+          }
+        } // allow fallthrough
+      }
+      case 2: {
+        for (int i = 1, j = blockSize; i < outputBufferLength; i+=kNumOutputChannels, j++) {
+          buffer[i] = (short) (foutputBuffer[j] * 32767.0f);
+        } // allow fallthrough
+      }
+      case 1: {
+        for (int i = 0, j = 0; i < outputBufferLength; i+=kNumOutputChannels, j++) {
+          buffer[i] = (short) (foutputBuffer[j] * 32767.0f);
+        } // allow fallthrough
+      }
+      case 0: break;
+    }
   }
   
   pp::Audio audio_;
@@ -121,8 +179,10 @@ bool ZgnaclInstance::Init(uint32_t argc, const char* argn[], const char* argv[])
   
   // construct a very basic osc~ graph. Only for testing.
   ZGGraph *zgGraph = zg_context_new_empty_graph(zgContext_);
-  ZGObject *zgOscObject = zg_graph_add_new_object(zgGraph, "osc~ 440", 0.0f, 0.0f);
-  ZGObject *zgDacObject = zg_graph_add_new_object(zgGraph, "dac~", 0.0f, 0.0f);
+  ZGObject *zgOscObject = zg_graph_new_object(zgGraph, "osc~ 440");
+  zg_graph_add_object(zgGraph, zgOscObject, 0.0f, 0.0f);
+  ZGObject *zgDacObject = zg_graph_new_object(zgGraph, "dac~");
+  zg_graph_add_object(zgGraph, zgDacObject, 0.0f, 0.0f);
   zg_graph_add_connection(zgGraph, zgOscObject, 0, zgDacObject, 0);
   zg_graph_add_connection(zgGraph, zgOscObject, 0, zgDacObject, 1);
   zg_graph_attach(zgGraph);
