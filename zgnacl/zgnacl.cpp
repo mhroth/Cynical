@@ -118,6 +118,7 @@ bool ZgnaclInstance::Init(uint32_t argc, const char* argn[], const char* argv[])
       ZenGardenCallback, this);
   
   zgContext_ = zg_context_new(kNumInputChannels, kNumOutputChannels, blockSize_, 44100.0f, zgCallbackFunction, this);
+  zg_context_register_receiver(zgContext_, "#PATCH_TO_WEB");
   
   // construct a very basic osc~ graph. Only for testing.
   ZGGraph *zgGraph = zg_context_new_empty_graph(zgContext_);
@@ -201,6 +202,14 @@ extern "C" {
         string errorStr = string("ERROR: ");
         string str = string((const char *) ptr);
         zgnaclInstance->PostMessage(pp::Var(errorStr + str));
+        break;
+      }
+      case ZG_RECEIVER_MESSAGE: {
+        ZgnaclInstance *zgnaclInstance = (ZgnaclInstance *) userData;
+        ZGReceiverMessagePair *pair = (ZGReceiverMessagePair *) ptr;
+        const char *receiverName = pair->receiverName;
+        ZGMessage *message = pair->message;
+        zgnaclInstance->PostMessage(pp::Var(string(zg_message_get_symbol(0, message))));
         break;
       }
       default: {
