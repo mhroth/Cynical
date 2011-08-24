@@ -22,7 +22,7 @@ nacl_env.Append(
     # #include "examples/sine_synth/sine_synth.h"
     CPPPATH=['../ZenGarden/src'],
     # Strict ANSI compliance.
-    EXTRA_CCFLAGS=['-I../ZenGarden/src', '-pedantic', '-w', '-D__APPLE__=0', '-msse2'],
+    EXTRA_CCFLAGS=['-I../ZenGarden/src', '-pedantic', '-w', '-D__APPLE__=0'],
    )
 
 sources = ['zgnacl.cpp']
