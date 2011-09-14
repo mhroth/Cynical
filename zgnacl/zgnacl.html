@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>Zgnacl!</title>
-
   <script type="text/javascript">
     ZgnaclModule = null;  // Global application object.
     statusText = 'NO-STATUS';
@@ -64,21 +63,40 @@
     function info() {
       ZgnaclModule.postMessage('info');
     }
+    
+     function handleFileSelect(evt) {
+       var files = evt.target.files; // FileList object
+       var file = files[0];
+       if (file != null) {
+         var reader = new FileReader();
+         reader.onload = function(e) {
+           ZgnaclModule.postMessage("newGraph:" + e.target.result);
+         };
+         reader.readAsText(file, "utf-8");
+       }
+     }
   </script>
 </head>
 <body onload="pageDidLoad()">
-
-<h1>Native Client Module ZGNaCl (Cynical)</h1>
+<h1>Native Client (NaCl) Module ZGNaCl (Cynical)</h1>
 <p>In order to run this demo you must:<br/>
 <ul>
-<li>Be running at least <a href="http://www.chromium.org/getting-involved/dev-channel">Chrome v13</a> for Mac.</li>
+<li>Be running at least <a href="http://www.chromium.org/getting-involved/dev-channel">Chrome v14</a> for Mac, Linux, or Windows.</li>
 <li>Enable <a href="http://code.google.com/chrome/nativeclient/docs/technical_overview.html">Native Client</a> support in <a href="chrome://flags/">about:flags</a>.</li>
 <li>Enable the Native Client plugin in <a href="chrome://plugins/">about:plugins</a>.</li>
 </ul></p>
-<p>Click the button to start and stop the sine wave playing.</p>
+<p>The code is available at <a href="https://github.com/mhroth/Cynical">https://github.com/mhroth/Cynical</a></p>
+<p>Cynical is a NaCl wrapper for <a href="https://github.com/mhroth/ZenGarden">ZenGarden</a>, a runtime for the <a href="http://puredata.info/">Pure Data</a> (Pd) audio programming language.</p>
+<ol>
+<li>Choose a Pd file to play in the browser.<br/><input type="file" id="files" name="files[]" multiple /></li><br/>
+<li>Press Play in order to hear the patch.<br/>
 <button onclick="toggleSound(true)">Play</button>
 <button onclick="toggleSound(false)">Stop</button>
-<button onclick="info()">Info</button>
+<button onclick="info()">Info</button></li>
+</ol>
+<script type="text/javascript">
+  document.getElementById('files').addEventListener('change', handleFileSelect, false);
+</script>
 <p>
   <!-- Load the published .nexe.  This includes the 'nacl' attribute which
   shows how to load multi-architecture modules.  Each entry in the "nexes"
@@ -98,8 +116,7 @@
   -->
   <div id="listener">
     <script type="text/javascript">
-       document.getElementById('listener')
-          .addEventListener('load', moduleDidLoad, true);
+       document.getElementById('listener').addEventListener('load', moduleDidLoad, true);
     </script>
 
     <embed name="nacl_module"
@@ -109,7 +126,6 @@
        type="application/x-nacl" />
   </div>
 </p>
-
 <h2>Status</h2>
 <div id="status_field">NO-STATUS</div>
 </body>

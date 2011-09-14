@@ -28,7 +28,6 @@
 #include "ppapi/cpp/var.h"
 
 #include "ZenGarden.h"
-#include "ZGCallbackFunction.h"
 
 using namespace std;
 
@@ -41,7 +40,7 @@ using namespace std;
 #define kNumOutputChannels 2
 
 extern "C" {
-  extern void zgCallbackFunction(ZGCallbackFunction, void *, void *);
+  extern void *zgCallbackFunction(ZGCallbackFunction, void *, void *);
 }
 
 // Note to the user: This glue code reflects the current state of affairs.  It
@@ -117,16 +116,11 @@ bool ZgnaclInstance::Init(uint32_t argc, const char* argn[], const char* argv[])
   audio_ = pp::Audio(this, pp::AudioConfig(this, PP_AUDIOSAMPLERATE_44100, blockSize_),
       ZenGardenCallback, this);
   
+  // create the ZGContext
   zgContext_ = zg_context_new(kNumInputChannels, kNumOutputChannels, blockSize_, 44100.0f, zgCallbackFunction, this);
-  zg_context_register_receiver(zgContext_, "#PATCH_TO_WEB");
   
-  // construct a very basic osc~ graph. Only for testing.
-  ZGGraph *zgGraph = zg_context_new_empty_graph(zgContext_);
-  ZGObject *zgOscObject = zg_graph_add_new_object(zgGraph, "osc~ 440", 0.0f ,0.0f);
-  ZGObject *zgDacObject = zg_graph_add_new_object(zgGraph, "dac~", 0.0f, 0.0f);
-  zg_graph_add_connection(zgGraph, zgOscObject, 0, zgDacObject, 0);
-  zg_graph_add_connection(zgGraph, zgOscObject, 0, zgDacObject, 1);
-  zg_graph_attach(zgGraph);
+  // register an external receiver
+  zg_context_register_receiver(zgContext_, "#PATCH_TO_WEB");
   
   return true;
 }
@@ -155,9 +149,26 @@ void ZgnaclInstance::HandleMessage(const pp::Var& var_message) {
     char stringBuffer[32];
     snprintf(stringBuffer, 32, "blocksize: %i", blockSize_);
     zgCallbackFunction(ZG_PRINT_STD, this, stringBuffer);
-  } else {
-    // if we mess something up, return the input
-    PostMessage(var_message);
+  } else { // process functions with arguments
+    size_t pos = message.find_first_of(kMessageArgumentSeparator); // find position of first argument
+    if (pos != string::npos) {
+      if (!message.compare(0, pos, "newGraph")) {
+        string graphDesc = message.substr(pos+1, string::npos); // get the graph description
+        ZGGraph *graph = zg_context_new_graph_from_string(zgContext_, graphDesc.c_str());
+        if (graph != NULL) {
+          zg_graph_attach(graph);
+          PostMessage(string("Graph successfully created."));
+        } else {
+          PostMessage(string("Graph could not be created. Reason unknown."));
+        }
+      } else {
+        // if we mess something up, return the input
+        PostMessage(var_message);
+      }
+    } else {
+      // if we mess something up, return the input
+      PostMessage(var_message);
+    }
   }
 }
 
@@ -190,7 +201,7 @@ Module* CreateModule() {
 
 // just post everything that comes out of ZenGarden to the browser
 extern "C" {
-  void zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr) {
+  void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr) {
     switch (function) {
       case ZG_PRINT_STD: {
         ZgnaclInstance *zgnaclInstance = (ZgnaclInstance *) userData;
@@ -209,12 +220,14 @@ extern "C" {
         ZGReceiverMessagePair *pair = (ZGReceiverMessagePair *) ptr;
         const char *receiverName = pair->receiverName;
         ZGMessage *message = pair->message;
-        zgnaclInstance->PostMessage(pp::Var(string(zg_message_get_symbol(0, message))));
+        char *messageString = zg_message_to_string(message);
+        zgnaclInstance->PostMessage(pp::Var(string(receiverName) + ": " + string(messageString)));
+        free(messageString);
         break;
       }
-      default: {
-        break;
-      }
+      default: break;
     }
+    
+    return NULL;
   }
 };
