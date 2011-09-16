@@ -25,7 +25,7 @@ nacl_env.Append(
     EXTRA_CCFLAGS=['-I../ZenGarden/src', '-pedantic', '-w', '-D__APPLE__=0'],
    )
 
-sources = ['zgnacl.cpp']
+sources = ['ZgnaclInstance.cpp', 'zgcallback.cpp']
 zgsources = [x for x in locate("*.cpp", "../ZenGarden/src")]
 zgsources.remove("main.cpp") # do not consider main.cpp
 sources.extend(zgsources) # concatinate the two source vectors
