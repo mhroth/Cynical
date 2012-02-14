@@ -11,9 +11,9 @@ void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr)
       break;
     }
     case ZG_PRINT_ERR: {
-      string errorStr = string("ERROR: ");
-      string str = string((const char *) ptr);
-      zgnaclInstance->PostMessage(pp::Var(errorStr + str));
+      char buffer[snprintf(NULL, 0, "ERROR: %s", (const char *) ptr)+1];
+      snprintf(buffer, sizeof(buffer), "ERROR: %s", (const char *) ptr);
+      zgnaclInstance->PostMessage(pp::Var(buffer));
       break;
     }
     case ZG_RECEIVER_MESSAGE: {
@@ -21,7 +21,11 @@ void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr)
       const char *receiverName = pair->receiverName;
       ZGMessage *message = pair->message;
       char *messageString = zg_message_to_string(message);
-      zgnaclInstance->PostMessage(pp::Var(string(receiverName) + ": " + string(messageString)));
+      char buffer[snprintf(NULL, 0, "receiveMessage:%s:%f:%s",
+          receiverName, zg_message_get_timestamp(message), messageString)+1];
+      snprintf(buffer, sizeof(buffer), "receiveMessage:%s:%f:%s",
+          receiverName, zg_message_get_timestamp(message), messageString);
+      zgnaclInstance->PostMessage(pp::Var(buffer));
       free(messageString);
       break;
     }

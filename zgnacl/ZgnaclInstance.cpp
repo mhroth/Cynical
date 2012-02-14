@@ -5,19 +5,15 @@
 #define kStopSoundId "stopSound"
 #define kMessageArgumentSeparator ':'
 
-#define kSampleFrameCount 512 // The preferred block size
-#define kNumInputChannels 0
-#define kNumOutputChannels 2
-
 bool ZgnaclInstance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
   
-  // Ask the device for an appropriate sample count size.
-  blockSize_ = pp::AudioConfig::RecommendSampleFrameCount(PP_AUDIOSAMPLERATE_44100, kSampleFrameCount);
+  // Ask the device for an appropriate block size, with a default of 512
+  blockSize_ = pp::AudioConfig::RecommendSampleFrameCount(PP_AUDIOSAMPLERATE_44100, 512);
   audio_ = pp::Audio(this, pp::AudioConfig(this, PP_AUDIOSAMPLERATE_44100, blockSize_),
       audioCallback, this);
   
-  // create the ZGContext
-  zgContext_ = zg_context_new(kNumInputChannels, kNumOutputChannels, blockSize_, 44100.0f, zgCallbackFunction, this);
+  // create the ZGContext with 0 input and 2 output channels
+  zgContext_ = zg_context_new(0, 2, blockSize_, 44100.0f, zgCallbackFunction, this);
   
   // register an external receiver
   zg_context_register_receiver(zgContext_, "#PATCH_TO_WEB");
@@ -57,23 +53,49 @@ void ZgnaclInstance::HandleMessage(const pp::Var& var_message) {
         if (graph != NULL) {
           zg_graph_attach(graph);
           PostMessage(pp::Var(reinterpret_cast<int32_t>(graph))); // return the id of the new graph
+          // NOTE(mhroth): reinterpret_cast<int32_t> could cause problems with 64-bit systems. It
+          // is intended that this returned value can be used to refer to the specific according to
+          // its memory address.
         } else {
           PostMessage(pp::Var("Graph could not be created. Reason unknown."));
         }
+      } else if (!message.compare(0, pos, "sendMessage")) {
+        // receiver:timestamp:arguments
+        // "recName:0.0:0 0"
+       
+        // first argument is receiver
+        size_t pos2 = message.find_first_of(kMessageArgumentSeparator, pos+1);
+        string receiverName = message.substr(pos+1, pos2-pos);
+        
+        // second argument is timestamp
+        size_t pos3 = message.find_first_of(kMessageArgumentSeparator, pos2+1);
+        string timestamp = message.substr(pos2+1, pos3-pos2);
+        
+        // third argument is message description
+        string initString = message.substr(pos3+1, string::npos);
+
+        // create the message from the string. Do not resolve inputs.
+        ZGMessage *zgMessage = zg_message_new_from_string(
+            strtod(timestamp.c_str(), NULL), initString.c_str());
+        
+        // send the message into ZenGarden
+        zg_context_send_message(zgContext_, receiverName.c_str(), zgMessage);
+        
+        zg_message_delete(zgMessage);
       } else {
-        // if we mess something up, return the input
-        PostMessage(var_message);
+        PostMessage(var_message); // if we mess something up, return the input
       }
     } else {
-      // if we mess something up, return the input
-      PostMessage(var_message);
+      PostMessage(var_message); // if we mess something up, return the input
     }
   }
 }
 
-/// The Module class.  The browser calls the CreateInstance() method to create
-/// an instance of your NaCl module on the web page.  The browser creates a new
-/// instance for each <embed> tag with type="application/x-nacl".
+/*
+ * The Module class.  The browser calls the CreateInstance() method to create
+ * an instance of your NaCl module on the web page.  The browser creates a new
+ * instance for each <embed> tag with type="application/x-nacl".
+ */
 class ZgnaclModule : public pp::Module {
  public:
   ZgnaclModule() : pp::Module() {}
@@ -88,12 +110,12 @@ class ZgnaclModule : public pp::Module {
 };
 
 namespace pp {
-/// Factory function called by the browser when the module is first loaded.
-/// The browser keeps a singleton of this module.  It calls the
-/// CreateInstance() method on the object you return to make instances.  There
-/// is one instance per <embed> tag on the page.  This is the main binding
-/// point for your NaCl module with the browser.
-Module* CreateModule() {
-  return new ZgnaclModule();
-}
-}  // namespace pp
+  /// Factory function called by the browser when the module is first loaded.
+  /// The browser keeps a singleton of this module.  It calls the
+  /// CreateInstance() method on the object you return to make instances.  There
+  /// is one instance per <embed> tag on the page.  This is the main binding
+  /// point for your NaCl module with the browser.
+  Module* CreateModule() {
+    return new ZgnaclModule();
+  }
+} // end namespace pp
