@@ -62,15 +62,15 @@ void ZgnaclInstance::HandleMessage(const pp::Var& var_message) {
       } else if (!message.compare(0, pos, "sendMessage")) {
         // receiver:timestamp:arguments
         // "recName:0.0:0 0"
-       
+
         // first argument is receiver
         size_t pos2 = message.find_first_of(kMessageArgumentSeparator, pos+1);
-        string receiverName = message.substr(pos+1, pos2-pos);
+        string receiverName = message.substr(pos+1, pos2-pos-1);
         
         // second argument is timestamp
         size_t pos3 = message.find_first_of(kMessageArgumentSeparator, pos2+1);
-        string timestamp = message.substr(pos2+1, pos3-pos2);
-        
+        string timestamp = message.substr(pos2+1, pos3-pos2-1);
+
         // third argument is message description
         string initString = message.substr(pos3+1, string::npos);
 
