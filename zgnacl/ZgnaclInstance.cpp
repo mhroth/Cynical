@@ -94,15 +94,10 @@ void ZgnaclInstance::HandleMessage(const pp::Var& var_message) {
 
         // third argument is message description
         string initString = message.substr(pos3+1, string::npos);
-
-        // create the message from the string. Do not resolve inputs.
-        ZGMessage *zgMessage = zg_message_new_from_string(
-            strtod(timestamp.c_str(), NULL), initString.c_str());
         
         // send the message into ZenGarden
-        zg_context_send_message(zgContext_, receiverName.c_str(), zgMessage);
-        
-        zg_message_delete(zgMessage);
+        zg_context_send_message_from_string(zgContext_, receiverName.c_str(),
+            strtod(timestamp.c_str(), NULL), initString.c_str());
       } else {
         PostMessage(var_message); // if we mess something up, return the input
       }
