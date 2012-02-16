@@ -1,14 +1,9 @@
-Cynical
-=======
+# Cynical
 
-Overview
---------
+## Overview
+Cynical is a [Native Client](http://code.google.com/p/nativeclient/) (NaCl) wrapper for the [ZenGarden](https://github.com/mhroth/ZenGarden) [Pure Data](http://puredata.info/) (Pd) runtime. It allows Pd patches to be run in the [Google Chrome](https://www.google.com/chrome/) webbrowser and exposes a simple JavaScript API for creating, querying, and modifying them in real time.
 
-Cynical is a Native Client (NaCl) wrapper for the ZenGarden Pure Data (Pd) runtime. It allows Pd patches to be run in the Chrome webbrowser and exposes a rich JavaScript API for creating, querying, and modifying them in real time.
-
-How to Get Started
-------------------
-
+## How to Get Started
   + Download the NaCl SDK.  http://code.google.com/chrome/nativeclient/docs/download.html
 
   + You might as well read the tutorial. http://code.google.com/chrome/nativeclient/docs/tutorial.html
@@ -20,6 +15,34 @@ How to Get Started
   + Build the project with scons.
 
   + ...
+
+## The JavaScript API
+There is currently a very primitive JavaScript API available. Cynical is limited to loading a patch (with *no* abstractions), and sending arbitrary messages to arbitrary receivers. It is not currenly possible to send messages back to JavaScipt, for example via the [print] object or external receivers.
+
+
+### newGraph
+A single graph can be easily loaded with new `newGraph` command. The netlist (as written in a .pd file) is provided as is, and will be parsed by ZenGarden.
+
+```Javascript
+function newGraph(netlist) {
+  ZgnaclModule.postMessage("newGraph:" + netlist);
+}
+```
+
+### sendMessage
+Messages may be sent to the graph with the `sendMessage` command. The receiver name, timestamp at which the message should be delivered, and the message formatted as a string are required arguments. In practice the timestamp should always be zero (i.e. `0.0`) such that the message is delivered immediately. The message string can be anything that describes a valid Pd message. Examples include:
+
+  + `0 0 0`: a message with three floats, each equal to zero.
+  + `hello world 0`: a message with three elements, the first two are strings and the last one is a float.
+  + `!`: a message with one bang element
+
+```Javascript
+function sendMessage(receiverName, timestamp, messageString) {
+  ZgnaclModule.postMessage("sendMessage:" + receiverName + ":" + timestamp + ":" + messageString);
+}
+```
+
+### play/pause
 
 Where the Action is
 -------------------
