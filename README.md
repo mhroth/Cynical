@@ -41,8 +41,23 @@ function sendMessage(receiverName, timestamp, messageString) {
 ```
 
 ## play & pause
+Audio can be easily started and stopped via the `play` and `pause` commands, their function being self-explanatory. Note that when Cynical is paused, neither audio nor messages are processed. Cynical will behave as if time were standing still. If some kind of mute functionality is desired, while messages continue to be processed, this must be build directly into the patch.
+
+```Javascript
+function play() {
+  ZgnaclModule.postMessage("play");
+}
+
+function pause() {
+  ZgnaclModule.postMessage("pause");
+}
+```
 
 ## An Example
+
+```Javascript
+// TODO(mhroth)
+```
 
 # Restrictions and Limitations
 Currenty there are a number of important limitations to the implementation. These are due to technical hurdles which can be overcome, with the exception of the last point.
