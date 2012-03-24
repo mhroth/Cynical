@@ -29,10 +29,10 @@ class LightPipe {
     LightPipe(unsigned int numKBytes);
     ~LightPipe();
   
-    void write(unsigned int numBytes, const char *buffer);
+    void write(int numBytes, const char *buffer);
   
     /** Reads into the given buffer. Returns the number of bytes read. */
-    int read(unsigned int numBytes, char *buffer);
+    int read(int numBytes, char *buffer);
     
   private:
     unsigned long numMemoryBytes;

@@ -35,7 +35,6 @@ void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr)
       *((ZGCallbackFunction *) buffer) = function;
       memcpy(buffer+sizeof(function), ptr, ptrLen);
       zgnaclInstance->getPipe()->write(sizeof(buffer), buffer);
-      //zgnaclInstance->PostMessage(pp::Var((const char *) ptr));
       break;
     }
     case ZG_PRINT_ERR: {
@@ -44,10 +43,6 @@ void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr)
       *((ZGCallbackFunction *) buffer) = function;
       memcpy(buffer+sizeof(function), ptr, ptrLen);
       zgnaclInstance->getPipe()->write(sizeof(buffer), buffer);
-      
-//      char buffer[snprintf(NULL, 0, "ERROR: %s", (const char *) ptr)+1];
-//      snprintf(buffer, sizeof(buffer), "ERROR: %s", (const char *) ptr);
-//      zgnaclInstance->PostMessage(pp::Var(buffer));
       break;
     }
     case ZG_RECEIVER_MESSAGE: {
@@ -71,10 +66,6 @@ void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr)
       snprintf(buffer+sizeof(function), sizeof(buffer)-sizeof(function),
           "Received unknown callback function: %i", function);
       zgnaclInstance->getPipe()->write(sizeof(buffer), buffer);
-      
-//      char str[snprintf(NULL, 0, "Received unknown callback function: %i", function)+1];
-//      snprintf(str, sizeof(str), "Received unknown callback function: %i", function);
-//      zgnaclInstance->PostMessage(pp::Var(str));
       break;
     }
   }
@@ -83,12 +74,12 @@ void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr)
 }
 
 // this function is called on the main thread
-void zgReadAndProcessPipe(void* user_data, int32_t result) {
+void zgReadAndProcessPipe(void *user_data, int32_t result) {
   ZgnaclInstance *zgnacl = reinterpret_cast<ZgnaclInstance *>(user_data);
-  unsigned int numBufferBytes = 1024;
+  int numBufferBytes = 1024;
   char buffer[numBufferBytes];
   int bytesRead = 0;
-  while ((bytesRead = zgnacl->getPipe()->read(numBufferBytes, buffer)) <= numBufferBytes) {
+  while ((bytesRead = zgnacl->getPipe()->read(numBufferBytes, buffer)) > 0 && bytesRead <= numBufferBytes) {
     ZGCallbackFunction function = *((ZGCallbackFunction *) buffer);
     switch (function) {
       case ZG_PRINT_STD: {
@@ -110,11 +101,12 @@ void zgReadAndProcessPipe(void* user_data, int32_t result) {
         break;
       }
       default: {
+        zgnacl->PostMessage(pp::Var("Unknown function."));
         break;
       }
     }
   }
   
-  pp::Core *core = pp::Module::Get()->core();
-  core->CallOnMainThread(PIPE_READER_INTERVAL_MS, pp::CompletionCallback(&zgReadAndProcessPipe, user_data), 0);
+  pp::Module::Get()->core()->CallOnMainThread(PIPE_READER_INTERVAL_MS,
+      pp::CompletionCallback(zgReadAndProcessPipe, user_data), 0);
 }

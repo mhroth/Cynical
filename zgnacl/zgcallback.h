@@ -27,7 +27,7 @@
 extern "C" {
   void *zgCallbackFunction(ZGCallbackFunction, void *, void *);
   
-  void zgReadAndProcessPipe(void* user_data, int32_t result);
+  void zgReadAndProcessPipe(void *user_data, int32_t result);
 }
 
 #endif // _ZG_CALLBACK_H_
