@@ -25,7 +25,6 @@
 
 #define PIPE_READER_INTERVAL_MS (1000/20) // read pipe 20 times per second
 
-// just post everything that comes out of ZenGarden to the browser
 void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr) {
   ZgnaclInstance *zgnaclInstance = reinterpret_cast<ZgnaclInstance *>(userData);
   switch (function) {
@@ -46,14 +45,14 @@ void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr)
       break;
     }
     case ZG_RECEIVER_MESSAGE: {
-      ZGReceiverMessagePair *pair = (ZGReceiverMessagePair *) ptr;
+      ZGReceiverMessagePair *pair = reinterpret_cast<ZGReceiverMessagePair *>(ptr);
       const char *receiverName = pair->receiverName;
       ZGMessage *message = pair->message;
       char *messageString = zg_message_to_string(message);
       char buffer[sizeof(function)+snprintf(NULL, 0, "%s:%f:%s",
           receiverName, zg_message_get_timestamp(message), messageString)+1];
       *((ZGCallbackFunction *) buffer) = function;
-      snprintf(buffer+sizeof(function), sizeof(buffer)-sizeof(function), "%s:%f:%s",
+      snprintf(buffer+sizeof(function), sizeof(buffer)-sizeof(function), "%s:%g:%s",
           receiverName, zg_message_get_timestamp(message), messageString);
       zgnaclInstance->getPipe()->write(sizeof(buffer), buffer);
       free(messageString);

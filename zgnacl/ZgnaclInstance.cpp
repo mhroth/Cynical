@@ -96,13 +96,13 @@ void ZgnaclInstance::HandleMessage(const pp::Var& var_message) {
         // send the message into ZenGarden
         zg_context_send_message_from_string(zgContext_, receiverName.c_str(),
             strtod(timestamp.c_str(), NULL), initString.c_str());
+      } else if (!message.compare(0, pos, "registerReceiver")) {
+        // register an external receiver
+        string receiverName = message.substr(pos+1, string::npos);
+        zg_context_register_receiver(zgContext_, receiverName.c_str());
       } else {
         PostMessage(var_message); // if we mess something up, return the input
       }
-    } else if (!message.compare(0, pos, "registerReceiver")) {
-      // register an external receiver
-      string receiverName = message.substr(pos+1, string::npos);
-      zg_context_register_receiver(zgContext_, receiverName.c_str());
     } else {
       PostMessage(var_message); // if we mess something up, return the input
     }

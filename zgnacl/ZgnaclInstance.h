@@ -84,7 +84,7 @@ public:
   // property accessor
   uint32_t blockSize() const { return blockSize_; }
   
-  LightPipe *getPipe() { return pipe_; }
+  LightPipe *getPipe() const { return pipe_; }
   
 private:
   static void audioCallback(void *samples, uint32_t buffer_size, void *data);
