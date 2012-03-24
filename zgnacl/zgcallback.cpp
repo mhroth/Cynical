@@ -79,6 +79,7 @@ void zgReadAndProcessPipe(void *user_data, int32_t result) {
   int numBufferBytes = 1024;
   char buffer[numBufferBytes];
   int bytesRead = 0;
+  // TODO(mhroth): if the buffer is too small to read the object, reallocate it larger 
   while ((bytesRead = zgnacl->getPipe()->read(numBufferBytes, buffer)) > 0 && bytesRead <= numBufferBytes) {
     ZGCallbackFunction function = *((ZGCallbackFunction *) buffer);
     switch (function) {
