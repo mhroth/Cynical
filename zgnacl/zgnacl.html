@@ -83,6 +83,10 @@
     function registerReceiver(receiverName) {
       ZgnaclModule.postMessage("registerReceiver:" + receiverName);
     }
+    
+    function unregisterReceiver(receiverName) {
+      ZgnaclModule.postMessage("unregisterReceiver:" + receiverName);
+    }
   </script>
 </head>
 <body onload="pageDidLoad()">
