@@ -22,10 +22,10 @@ nacl_env.Append(
     # #include "examples/sine_synth/sine_synth.h"
     CPPPATH=['../ZenGarden/src'],
     # Strict ANSI compliance.
-    EXTRA_CCFLAGS=['-I../ZenGarden/src', '-pedantic', '-w', '-D__APPLE__=0'],
+    EXTRA_CCFLAGS=['-I../ZenGarden/src', '-pedantic', '-w', '-D__APPLE__=0', '-msse', '-mfpmath=sse', '-ffast-math'],
    )
 
-sources = ['ZgnaclInstance.cpp', 'zgcallback.cpp']
+sources = ['ZgnaclInstance.cpp', 'zgcallback.cpp', 'LightPipe.cpp']
 zgsources = [x for x in locate("*.cpp", "../ZenGarden/src")]
 zgsources.remove("main.cpp") # do not consider main.cpp
 sources.extend(zgsources) # concatinate the two source vectors

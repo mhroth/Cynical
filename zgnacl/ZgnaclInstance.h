@@ -24,10 +24,13 @@
 
 #include <cstdio>
 #include <string>
+#include <string.h>
 #include "ppapi/cpp/audio.h"
+#include "ppapi/cpp/completion_callback.h"
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
+#include "LightPipe.h"
 #include "ZenGarden.h"
 using namespace std;
 
@@ -51,7 +54,10 @@ public:
   /// The constructor creates the plugin-side instance.
   /// @param[in] instance the handle to the browser-side plugin instance.
   explicit ZgnaclInstance(PP_Instance instance) : pp::Instance(instance) {}
-  virtual ~ZgnaclInstance() {}
+  virtual ~ZgnaclInstance() {
+    zg_context_delete(zgContext_);
+    delete pipe_;
+  }
   
   // Called by the browser once the NaCl module is loaded and ready to
   // initialize.  Creates a Pepper audio context and initializes it. Returns
@@ -78,6 +84,8 @@ public:
   // property accessor
   uint32_t blockSize() const { return blockSize_; }
   
+  LightPipe *getPipe() { return pipe_; }
+  
 private:
   static void audioCallback(void *samples, uint32_t buffer_size, void *data);
   
@@ -87,6 +95,8 @@ private:
   uint32_t blockSize_;
   
   ZGContext *zgContext_;
+  
+  LightPipe *pipe_;
 };
 
 #endif // _ZGNACL_INSTANCE_H_

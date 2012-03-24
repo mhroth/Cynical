@@ -23,18 +23,31 @@
 #include "zgcallback.h"
 #include "ppapi/cpp/completion_callback.h"
 
+#define PIPE_READER_INTERVAL_MS (1000/20) // read pipe 20 times per second
+
 // just post everything that comes out of ZenGarden to the browser
 void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr) {
-  ZgnaclInstance *zgnaclInstance = (ZgnaclInstance *) userData;
+  ZgnaclInstance *zgnaclInstance = reinterpret_cast<ZgnaclInstance *>(userData);
   switch (function) {
     case ZG_PRINT_STD: {
-      zgnaclInstance->PostMessage(pp::Var((const char *) ptr));
+      size_t ptrLen = strlen((const char *) ptr);
+      char buffer[sizeof(function)+ptrLen+1];
+      *((ZGCallbackFunction *) buffer) = function;
+      memcpy(buffer+sizeof(function), ptr, ptrLen);
+      zgnaclInstance->getPipe()->write(sizeof(buffer), buffer);
+      //zgnaclInstance->PostMessage(pp::Var((const char *) ptr));
       break;
     }
     case ZG_PRINT_ERR: {
-      char buffer[snprintf(NULL, 0, "ERROR: %s", (const char *) ptr)+1];
-      snprintf(buffer, sizeof(buffer), "ERROR: %s", (const char *) ptr);
-      zgnaclInstance->PostMessage(pp::Var(buffer));
+      size_t ptrLen = strlen((const char *) ptr);
+      char buffer[sizeof(function)+ptrLen+1];
+      *((ZGCallbackFunction *) buffer) = function;
+      memcpy(buffer+sizeof(function), ptr, ptrLen);
+      zgnaclInstance->getPipe()->write(sizeof(buffer), buffer);
+      
+//      char buffer[snprintf(NULL, 0, "ERROR: %s", (const char *) ptr)+1];
+//      snprintf(buffer, sizeof(buffer), "ERROR: %s", (const char *) ptr);
+//      zgnaclInstance->PostMessage(pp::Var(buffer));
       break;
     }
     case ZG_RECEIVER_MESSAGE: {
@@ -42,19 +55,66 @@ void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr)
       const char *receiverName = pair->receiverName;
       ZGMessage *message = pair->message;
       char *messageString = zg_message_to_string(message);
-      char buffer[snprintf(NULL, 0, "receiveMessage:%s:%f:%s",
+      char buffer[sizeof(function)+snprintf(NULL, 0, "%s:%f:%s",
           receiverName, zg_message_get_timestamp(message), messageString)+1];
-      snprintf(buffer, sizeof(buffer), "receiveMessage:%s:%f:%s",
+      *((ZGCallbackFunction *) buffer) = function;
+      snprintf(buffer+sizeof(function), sizeof(buffer)-sizeof(function), "%s:%f:%s",
           receiverName, zg_message_get_timestamp(message), messageString);
-      zgnaclInstance->PostMessage(pp::Var(buffer));
+      zgnaclInstance->getPipe()->write(sizeof(buffer), buffer);
       free(messageString);
       break;
     }
     default: {
-      zgnaclInstance->PostMessage(pp::Var("Received unknown callback function."));
+      char buffer[sizeof(function)+snprintf(NULL, 0,
+          "Received unknown callback function: %i", function)+1];
+      *((ZGCallbackFunction *) buffer) = function;
+      snprintf(buffer+sizeof(function), sizeof(buffer)-sizeof(function),
+          "Received unknown callback function: %i", function);
+      zgnaclInstance->getPipe()->write(sizeof(buffer), buffer);
+      
+//      char str[snprintf(NULL, 0, "Received unknown callback function: %i", function)+1];
+//      snprintf(str, sizeof(str), "Received unknown callback function: %i", function);
+//      zgnaclInstance->PostMessage(pp::Var(str));
       break;
     }
   }
   
   return NULL;
+}
+
+// this function is called on the main thread
+void zgReadAndProcessPipe(void* user_data, int32_t result) {
+  ZgnaclInstance *zgnacl = reinterpret_cast<ZgnaclInstance *>(user_data);
+  unsigned int numBufferBytes = 1024;
+  char buffer[numBufferBytes];
+  int bytesRead = 0;
+  while ((bytesRead = zgnacl->getPipe()->read(numBufferBytes, buffer)) <= numBufferBytes) {
+    ZGCallbackFunction function = *((ZGCallbackFunction *) buffer);
+    switch (function) {
+      case ZG_PRINT_STD: {
+        char str[snprintf(NULL, 0, "printStd:%s", buffer+sizeof(function))+1];
+        snprintf(str, sizeof(str), "printStd:%s", buffer+sizeof(function));
+        zgnacl->PostMessage(pp::Var(str));
+        break;
+      }
+      case ZG_PRINT_ERR: {
+        char str[snprintf(NULL, 0, "printErr:%s", buffer+sizeof(function))+1];
+        snprintf(str, sizeof(str), "printErr:%s", buffer+sizeof(function));
+        zgnacl->PostMessage(pp::Var(str));
+        break;
+      }
+      case ZG_RECEIVER_MESSAGE: {
+        char str[snprintf(NULL, 0, "receiveMessage:%s", buffer+sizeof(function))+1];
+        snprintf(str, sizeof(str), "receiveMessage:%s", buffer+sizeof(function));
+        zgnacl->PostMessage(pp::Var(str));
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+  }
+  
+  pp::Core *core = pp::Module::Get()->core();
+  core->CallOnMainThread(PIPE_READER_INTERVAL_MS, pp::CompletionCallback(&zgReadAndProcessPipe, user_data), 0);
 }

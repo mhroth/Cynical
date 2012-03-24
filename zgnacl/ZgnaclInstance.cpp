@@ -39,6 +39,12 @@ bool ZgnaclInstance::Init(uint32_t argc, const char* argn[], const char* argv[])
   // register an external receiver
   zg_context_register_receiver(zgContext_, "#PATCH_TO_WEB");
   
+  // TODO(mhroth): initialise the light pipe here
+  pipe_ = new LightPipe(32);
+  
+  // kick off the LightPipe reader
+  zgReadAndProcessPipe(this, 0);
+  
   return true;
 }
 

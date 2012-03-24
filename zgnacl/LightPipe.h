@@ -1,5 +1,5 @@
 /*
- *  Copyright 2011,2012 Martin Roth
+ *  Copyright 2012 Martin Roth
  *            mhroth@gmail.com
  * 
  *  This file is part of Cynical.
@@ -19,15 +19,26 @@
  *
  */
 
-#ifndef _ZG_CALLBACK_H_
-#define _ZG_CALLBACK_H_
+#ifndef _LIGHT_PIPE_
+#define _LIGHT_PIPE_
 
-#include "ZenGarden.h"
-
-extern "C" {
-  void *zgCallbackFunction(ZGCallbackFunction, void *, void *);
+class LightPipe {
   
-  void zgReadAndProcessPipe(void* user_data, int32_t result);
-}
+  public:
+    /** Create a shared memory buffer of length numBytes. */
+    LightPipe(unsigned int numKBytes);
+    ~LightPipe();
+  
+    void write(unsigned int numBytes, const char *buffer);
+  
+    /** Reads into the given buffer. Returns the number of bytes read. */
+    int read(unsigned int numBytes, char *buffer);
+    
+  private:
+    unsigned long numMemoryBytes;
+    char *writePos;
+    char *readPos;
+    char *memory;
+};
 
-#endif // _ZG_CALLBACK_H_
+#endif // _LIGHT_PIPE_
