@@ -27,6 +27,10 @@
 extern "C" {
   void *zgCallbackFunction(ZGCallbackFunction, void *, void *);
   
+  /**
+   * This function is run on the main thread and acts as a reader of the LightPipe, processing
+   * messages from ZenGarden and sending them to JavaScript-land.
+   */
   void zgReadAndProcessPipe(void *user_data, int32_t result);
 }
 

@@ -36,9 +36,6 @@ bool ZgnaclInstance::Init(uint32_t argc, const char* argn[], const char* argv[])
   // create the ZGContext with 0 input and 2 output channels
   zgContext_ = zg_context_new(0, 2, blockSize_, 44100.0f, zgCallbackFunction, this);
   
-  // register an external receiver
-  zg_context_register_receiver(zgContext_, "#PATCH_TO_WEB");
-  
   // TODO(mhroth): initialise the light pipe here
   pipe_ = new LightPipe(32);
   
@@ -66,11 +63,6 @@ void ZgnaclInstance::HandleMessage(const pp::Var& var_message) {
     audio_.StartPlayback();
   } else if (message == kStopSoundId) {
     audio_.StopPlayback();
-  } else if (message == "info") {
-    // NOTE(mhroth): temporary for testing
-    char stringBuffer[32];
-    snprintf(stringBuffer, sizeof(stringBuffer), "blocksize: %i", blockSize_);
-    zgCallbackFunction(ZG_PRINT_STD, this, stringBuffer);
   } else { // process functions with arguments
     size_t pos = message.find_first_of(kMessageArgumentSeparator); // find position of first argument
     if (pos != string::npos) {
@@ -107,6 +99,10 @@ void ZgnaclInstance::HandleMessage(const pp::Var& var_message) {
       } else {
         PostMessage(var_message); // if we mess something up, return the input
       }
+    } else if (!message.compare(0, pos, "registerReceiver")) {
+      // register an external receiver
+      string receiverName = message.substr(pos+1, string::npos);
+      zg_context_register_receiver(zgContext_, receiverName.c_str());
     } else {
       PostMessage(var_message); // if we mess something up, return the input
     }
