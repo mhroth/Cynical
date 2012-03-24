@@ -6,3 +6,5 @@ dbg_x86_64/
 .DS_Store
 *.nexe
 *.nmf
+Cynical/
+zgnacl/Cynical/Cynical.xcodeproj/project.pbxproj
