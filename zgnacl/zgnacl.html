@@ -60,10 +60,6 @@
       }
     }
     
-    function info() {
-      ZgnaclModule.postMessage('info');
-    }
-    
     function handleFileSelect(evt) {
       var files = evt.target.files; // FileList object
       var file = files[0];
@@ -76,10 +72,16 @@
       }
     }
     
-    function sendMessage() {
-      // get input from text fields
-      //ZgnaclModule.postMessage("sendMessage:" + receiverName + ":" + timestamp + ":" + messageString);
-      ZgnaclModule.postMessage("sendMessage:oscPitch:0:220");
+    function sendMessage(receiverName, messageString) {
+      ZgnaclModule.postMessage("sendMessage:" + receiverName + ":0:" + messageString);
+    }
+    
+    function sendMessage(receiverName, timestamp, messageString) {
+      ZgnaclModule.postMessage("sendMessage:" + receiverName + ":" + timestamp + ":" + messageString);
+    }
+    
+    function registerReceiver(receiverName) {
+      ZgnaclModule.postMessage("registerReceiver:" + receiverName);
     }
   </script>
 </head>
@@ -98,8 +100,6 @@
 <li>Press Play in order to hear the patch.<br/>
 <button onclick="toggleSound(true)">Play</button>
 <button onclick="toggleSound(false)">Stop</button>
-<button onclick="info()">Info</button></li>
-<button onclick="sendMessage()">Send Message</button></li>
 </ol>
 <script type="text/javascript">
   document.getElementById('files').addEventListener('change', handleFileSelect, false);
