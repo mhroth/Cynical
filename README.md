@@ -62,7 +62,8 @@ function pause() {
 # Restrictions and Limitations
 Currenty there are a number of important limitations to the implementation. These are due to technical hurdles which can be overcome, with the exception of the last point.
 
-  + Messages cannot be sent from ZenGarden to JavaScript. This includes the output of objects such as [print], or messages sent to external receivers.
+  + <del>Messages cannot be sent from ZenGarden to JavaScript. This includes the output of objects such as [print], or messages sent to external receivers.</del>
+    + This issue is no longer a problem. Arbitrary messages may be sent to ZenGarden from JavaScript (forward direction), and from ZenGarden to JavaScript (reverse direction). In order to receive messages sent in the reverse direction, a receiver name must be registered with ZenGarden. Print statements will also be sent to JavaScript.
   + The loaded patch cannot refer to any abstractions. Subpatches are acceptable.
   + Binary assets, such as samples, cannot be loaded.
   + Microphone or line input is not available. This is unlikely to change soon, if at all, and is due to security issues raised by allowing automatic access to the system microphone in the browser.
