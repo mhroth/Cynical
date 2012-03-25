@@ -45,6 +45,19 @@ function sendMessageWithTimestamp(receiverName, timestamp, messageString) {
 }
 ```
 
+## registerReceiver
+In order to receive messages sent from ZenGarden to JavaScript, an external receiver must be registered. For instance, if a receiver named "toJs" is registered, then every message sent to that receiver in ZenGarden (perhaps via a `[s toJs]` object) will also be sent to JavaScript. External receivers may be registered and unregistered at any time.
+
+```JavaScript
+function registerReceiver(receiverName) {
+  ZgnaclModule.postMessage("registerReceiver:" + receiverName);
+}
+    
+function unregisterReceiver(receiverName) {
+  ZgnaclModule.postMessage("unregisterReceiver:" + receiverName);
+}
+```
+
 ## play & pause
 Audio can be easily started and stopped via the `play` and `pause` commands, their function being self-explanatory. Note that when Cynical is paused, neither audio nor messages are processed. Cynical will behave as if time were standing still. If some kind of mute functionality is desired, while messages continue to be processed, this must be build directly into the patch.
 
