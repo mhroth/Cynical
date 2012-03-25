@@ -71,6 +71,15 @@ function pause() {
 }
 ```
 
+## setPipeReadInterval
+For experts only. Messages sent in the reverse direction are polled by a reader thread. This function allows the poll interval (given in milliseconds) to be adjusted. The default interval is 50ms (20Hz). In this case, messages are delivered to JavaScript with up to a 50ms delay (+ a small delay added by Native Client).
+
+```JavaScript
+function setPipeReadInterval(intervalMs) {
+  ZgnaclModule.postMessage("setPipeReadInterval:" + intervalMs);
+}
+```
+
 ## An Example
 
 ```Javascript
@@ -90,7 +99,7 @@ Cynical is currently best suited for making synthesizers.
 
 # Where the Action is
 
-All of the wrapper code is currently here: https://github.com/mhroth/Cynical/blob/master/zgnacl/zgnacl.cpp
+The [ZgnaclInstance](https://github.com/mhroth/Cynical/blob/master/zgnacl/ZgnaclInstance.cpp) class contains most of the wrapper code. Start there for an overview.
 
 # Build the project with scons.
 
