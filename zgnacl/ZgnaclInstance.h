@@ -86,6 +86,9 @@ public:
   
   LightPipe *getPipe() const { return pipe_; }
   
+  void setPipeReadInterval(unsigned int intervalMs) { pipeReadIntervalMs = intervalMs; }
+  unsigned int getPipeReadInterval() const { return pipeReadIntervalMs; }
+  
 private:
   static void audioCallback(void *samples, uint32_t buffer_size, void *data);
   
@@ -97,6 +100,8 @@ private:
   ZGContext *zgContext_;
   
   LightPipe *pipe_;
+  
+  unsigned int pipeReadIntervalMs;
 };
 
 #endif // _ZGNACL_INSTANCE_H_

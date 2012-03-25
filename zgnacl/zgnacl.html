@@ -87,6 +87,10 @@
     function unregisterReceiver(receiverName) {
       ZgnaclModule.postMessage("unregisterReceiver:" + receiverName);
     }
+    
+    function setPipeReadInterval(intervalMs) {
+      ZgnaclModule.postMessage("setPipeReadInterval:" + intervalMs);
+    }
   </script>
 </head>
 <body onload="pageDidLoad()">

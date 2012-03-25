@@ -42,6 +42,8 @@ bool ZgnaclInstance::Init(uint32_t argc, const char* argn[], const char* argv[])
   // kick off the LightPipe reader
   zgReadAndProcessPipe(this, 0);
   
+  pipeReadIntervalMs = 50; // 50ms default pipe read interval
+  
   return true;
 }
 
@@ -104,6 +106,9 @@ void ZgnaclInstance::HandleMessage(const pp::Var& var_message) {
         // unregister an external receiver
         string receiverName = message.substr(pos+1, string::npos);
         zg_context_unregister_receiver(zgContext_, receiverName.c_str());
+      } else if (!message.compare(0, pos, "setPipeReadInterval")) {
+        string interval = message.substr(pos+1, string::npos);
+        zgnaclInstance->setPipeReadInterval(atoi(interval.c_str()));
       } else {
         PostMessage(var_message); // if we mess something up, return the input
       }

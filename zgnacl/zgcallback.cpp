@@ -107,6 +107,6 @@ void zgReadAndProcessPipe(void *user_data, int32_t result) {
     }
   }
   
-  pp::Module::Get()->core()->CallOnMainThread(PIPE_READER_INTERVAL_MS,
+  pp::Module::Get()->core()->CallOnMainThread(zgnacl->getPipeReadInterval(),
       pp::CompletionCallback(zgReadAndProcessPipe, user_data), 0);
 }

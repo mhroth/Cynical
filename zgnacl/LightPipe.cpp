@@ -60,7 +60,6 @@ void LightPipe::write(int numBytes, const char *buffer) {
   //asm volatile("" ::: "memory");
   
   int *oldWritePos = (int *) writePos;
-//  writePos += ((numBytes & 0xFFFFFFF0) + 16); // 16-byte is memory alignment?
   writePos += numBytes + sizeof(numBytes);
   *oldWritePos = numBytes;
 }
@@ -73,7 +72,6 @@ int LightPipe::read(int numBytes, char *buffer) {
     
     //asm volatile("" ::: "memory");
     
-//    readPos += ((numBytes & 0xFFFFFFF0) + 16);; // update the read position
     readPos += numBytesAtPos + sizeof(numBytes);
     if (*((int *) readPos) == -1) readPos = memory;
     return numBytesAtPos;
