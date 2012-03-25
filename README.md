@@ -35,7 +35,12 @@ Messages may be sent to the graph with the `sendMessage` command. The receiver n
   + `!`: a message with one bang element
 
 ```Javascript
+// the message is delivered immediately (when in doubt, use this function)
 function sendMessage(receiverName, timestamp, messageString) {
+  ZgnaclModule.postMessage("sendMessage:" + receiverName + ":0:" + messageString);
+}
+
+function sendMessageWithTimestamp(receiverName, timestamp, messageString) {
   ZgnaclModule.postMessage("sendMessage:" + receiverName + ":" + timestamp + ":" + messageString);
 }
 ```
