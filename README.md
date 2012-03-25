@@ -15,7 +15,7 @@ Cynical is a [Native Client](https://developers.google.com/native-client/) (NaCl
   + ...
 
 # The JavaScript API
-There is currently a very primitive JavaScript API available. Cynical is limited to loading a patch (with *no* abstractions), and sending arbitrary messages to arbitrary receivers. It is not currenly possible to send messages back to JavaScipt, for example via the [print] object or external receivers.
+There is currently a very primitive JavaScript API available. Please note the restrictions and limitations listed below.
 
 
 ## newGraph
