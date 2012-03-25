@@ -108,7 +108,7 @@ void ZgnaclInstance::HandleMessage(const pp::Var& var_message) {
         zg_context_unregister_receiver(zgContext_, receiverName.c_str());
       } else if (!message.compare(0, pos, "setPipeReadInterval")) {
         string interval = message.substr(pos+1, string::npos);
-        zgnaclInstance->setPipeReadInterval(atoi(interval.c_str()));
+        pipeReadIntervalMs = atoi(interval.c_str());
       } else {
         PostMessage(var_message); // if we mess something up, return the input
       }

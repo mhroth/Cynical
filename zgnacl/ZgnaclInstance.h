@@ -86,7 +86,6 @@ public:
   
   LightPipe *getPipe() const { return pipe_; }
   
-  void setPipeReadInterval(unsigned int intervalMs) { pipeReadIntervalMs = intervalMs; }
   unsigned int getPipeReadInterval() const { return pipeReadIntervalMs; }
   
 private:
