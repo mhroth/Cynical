@@ -26,14 +26,14 @@
 #define PIPE_READER_INTERVAL_MS (1000/20) // read pipe 20 times per second
 
 void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr) {
-  ZgnaclInstance *zgnaclInstance = reinterpret_cast<ZgnaclInstance *>(userData);
+  ZgnaclInstance *zgnacl = reinterpret_cast<ZgnaclInstance *>(userData);
   switch (function) {
     case ZG_PRINT_STD: {
       size_t ptrLen = strlen((const char *) ptr);
       char buffer[sizeof(function)+ptrLen+1];
       *((ZGCallbackFunction *) buffer) = function;
       memcpy(buffer+sizeof(function), ptr, ptrLen);
-      zgnaclInstance->getPipe()->write(sizeof(buffer), buffer);
+      zgnacl->getPipe()->write(sizeof(buffer), buffer);
       break;
     }
     case ZG_PRINT_ERR: {
@@ -41,7 +41,7 @@ void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr)
       char buffer[sizeof(function)+ptrLen+1];
       *((ZGCallbackFunction *) buffer) = function;
       memcpy(buffer+sizeof(function), ptr, ptrLen);
-      zgnaclInstance->getPipe()->write(sizeof(buffer), buffer);
+      zgnacl->getPipe()->write(sizeof(buffer), buffer);
       break;
     }
     case ZG_RECEIVER_MESSAGE: {
@@ -52,9 +52,9 @@ void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr)
       char buffer[sizeof(function)+snprintf(NULL, 0, "%s:%f:%s",
           receiverName, zg_message_get_timestamp(message), messageString)+1];
       *((ZGCallbackFunction *) buffer) = function;
-      snprintf(buffer+sizeof(function), sizeof(buffer)-sizeof(function), "%s:%g:%s",
+      snprintf(buffer+sizeof(function), sizeof(buffer)-sizeof(function), "%s:%f:%s",
           receiverName, zg_message_get_timestamp(message), messageString);
-      zgnaclInstance->getPipe()->write(sizeof(buffer), buffer);
+      zgnacl->getPipe()->write(sizeof(buffer), buffer);
       free(messageString);
       break;
     }
@@ -64,7 +64,7 @@ void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr)
       *((ZGCallbackFunction *) buffer) = function;
       snprintf(buffer+sizeof(function), sizeof(buffer)-sizeof(function),
           "Received unknown callback function: %i", function);
-      zgnaclInstance->getPipe()->write(sizeof(buffer), buffer);
+      zgnacl->getPipe()->write(sizeof(buffer), buffer);
       break;
     }
   }

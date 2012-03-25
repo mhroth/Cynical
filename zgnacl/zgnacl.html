@@ -75,11 +75,11 @@
     function sendMessage(receiverName, messageString) {
       ZgnaclModule.postMessage("sendMessage:" + receiverName + ":0:" + messageString);
     }
-    
-    function sendMessage(receiverName, timestamp, messageString) {
+
+    function sendMessageWithTimestamp(receiverName, timestamp, messageString) {
       ZgnaclModule.postMessage("sendMessage:" + receiverName + ":" + timestamp + ":" + messageString);
     }
-    
+
     function registerReceiver(receiverName) {
       ZgnaclModule.postMessage("registerReceiver:" + receiverName);
     }
