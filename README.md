@@ -99,7 +99,7 @@ Cynical is currently best suited for making synthesizers.
 
 # Where the Action is
 
-The [ZgnaclInstance](https://github.com/mhroth/Cynical/blob/master/zgnacl/ZgnaclInstance.cpp) class contains most of the wrapper code. Start there for an overview.
+The [ZgnaclInstance](https://github.com/mhroth/Cynical/blob/master/zgnacl/ZgnaclInstance.cpp) class contains most of the wrapper code. Start there for an overview. If you just want to use the library and start hacking away in JavaScript, see [zgnacl.html](https://github.com/mhroth/Cynical/blob/master/zgnacl/zgnacl.html) for a basic example.
 
 # Build the project with scons.
 
