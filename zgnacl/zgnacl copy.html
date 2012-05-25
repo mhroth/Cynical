@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Zgnacl!</title>
+  <script type="text/javascript">
+    ZgnaclModule = null;  // Global application object.
+    statusText = 'NO-STATUS';
+
+    // When the NaCl module has loaded, hook up an event listener to handle
+    // messages coming from it via PPB_Messaging.PostMessage() (in C) or
+    // pp::Instance.PostMessage() (in C++), and indicate success.
+    function moduleDidLoad() {
+      ZgnaclModule = document.getElementById('zgnacl');
+      ZgnaclModule.addEventListener('message', handleMessage, false);
+      updateStatus('Click and drag in the grey space on the right');
+    }
+
+    // The 'message' event handler.  This handler is fired when the NaCl module
+    // posts a message to the browser by calling PPB_Messaging.PostMessage()
+    // (in C) or pp::Instance.PostMessage() (in C++).  This implementation
+    // simply displays the content of the message in an alert panel.
+    function handleMessage(message_event) {
+      console.log(message_event);
+    }
+
+    // If the page loads before the Native Client module loads, then set the
+    // status message indicating that the module is still loading.  Otherwise,
+    // do not change the status message.
+    function pageDidLoad() {
+      if (ZgnaclModule == null) {
+        updateStatus('Loading synth...');
+      } else {
+        // It's possible that the Native Client module onload event fired
+        // before the page's onload event.  In this case, the status message
+        // will reflect 'SUCCESS', but won't be displayed.  This call will
+        // display the current message.
+        updateStatus();
+      }
+    }
+
+    // Set the global status message.  If the element with id 'statusField'
+    // exists, then set its HTML to the status message as well.
+    // opt_message The message test.  If this is null or undefined, then
+    // attempt to set the element with id 'statusField' to the value of
+    // |statusText|.
+    function updateStatus(opt_message) {
+      if (opt_message)
+        statusText = opt_message;
+      var statusField = document.getElementById('status_field');
+      if (statusField) {
+        statusField.innerHTML = statusText;
+      }
+    }
+    
+    function toggleSound(flag) {
+      if (flag) {
+        ZgnaclModule.postMessage('playSound');
+      } else {
+        ZgnaclModule.postMessage('stopSound');
+      }
+    }
+    
+    function info() {
+      ZgnaclModule.postMessage('info');
+    }
+    
+    function handleFileSelect(evt) {
+      var files = evt.target.files; // FileList object
+      var file = files[0];
+      if (file != null) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          ZgnaclModule.postMessage("newGraph:" + e.target.result);
+        };
+        reader.readAsText(file, "utf-8");
+      }
+    }
+    
+    function sendMessage() {
+      // get input from text fields
+      //ZgnaclModule.postMessage("sendMessage:" + receiverName + ":" + timestamp + ":" + messageString);
+      ZgnaclModule.postMessage("sendMessage:oscPitch:0:220");
+    }
+  </script>
+</head>
+<body onload="pageDidLoad()">
+<h1>Native Client (NaCl) Module ZGNaCl (Cynical)</h1>
+<p>In order to run this demo you must:<br/>
+<ul>
+<li>Be running at least <a href="http://www.chromium.org/getting-involved/dev-channel">Chrome v14</a> for Mac, Linux, or Windows.</li>
+<li>Enable <a href="http://code.google.com/chrome/nativeclient/docs/technical_overview.html">Native Client</a> support in <a href="chrome://flags/">about:flags</a>.</li>
+<li>Enable the Native Client plugin in <a href="chrome://plugins/">about:plugins</a>.</li>
+</ul></p>
+<p>The code is available at <a href="https://github.com/mhroth/Cynical">https://github.com/mhroth/Cynical</a></p>
+<p>Cynical is a NaCl wrapper for <a href="https://github.com/mhroth/ZenGarden">ZenGarden</a>, a runtime for the <a href="http://puredata.info/">Pure Data</a> (Pd) audio programming language.</p>
+<ol>
+<li>Choose a Pd file to play in the browser.<br/><input type="file" id="files" name="files[]" multiple /></li><br/>
+<li>Press Play in order to hear the patch.<br/>
+<button onclick="toggleSound(true)">Play</button>
+<button onclick="toggleSound(false)">Stop</button>
+<button onclick="info()">Info</button></li>
+<button onclick="sendMessage()">Send Message</button></li>
+</ol>
+<script type="text/javascript">
+  document.getElementById('files').addEventListener('change', handleFileSelect, false);
+</script>
+<p>
+  <!-- Load the published .nexe.  This includes the 'nacl' attribute which
+  shows how to load multi-architecture modules.  Each entry in the "nexes"
+  object in the .nmf manifest file is a key-value pair: the key is the
+  instruction set architecture ('x86-32', 'x86-64', etc.); the value is a URL
+  for the desired NaCl module.
+  To load the debug versions of your .nexes, set the 'nacl' attribute to the
+  _dbg.nmf version of the manifest file.
+
+  Note: Since this NaCl module does not use any real-estate in the browser,
+  it's width and height are set to 0.
+
+  Note: The <EMBED> element is wrapped inside a <DIV>, which has a 'load'
+  event listener attached.  This wrapping method is used instead of attaching
+  the 'load' event listener directly to the <EMBED> element to ensure that the
+  listener is active before the NaCl module 'load' event fires.
+  -->
+  <div id="listener">
+    <script type="text/javascript">
+       document.getElementById('listener').addEventListener('load', moduleDidLoad, true);
+    </script>
+
+    <embed name="nacl_module"
+       id="zgnacl"
+       width=0 height=0
+       src="zgnacl.nmf"
+       type="application/x-nacl" />
+  </div>
+</p>
+<h2>Status</h2>
+<div id="status_field">Loading synth...</div>
+</body>
+</html>

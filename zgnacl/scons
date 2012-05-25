@@ -8,7 +8,7 @@
 readonly SCRIPT_DIR="$(dirname "$0")"
 readonly SCRIPT_DIR_ABS="$(cd "${SCRIPT_DIR}" ; pwd -P)"
 
-export NACL_SDK_ROOT=/Users/mhroth/workspace/nacl_sdk
+export NACL_SDK_ROOT=/Users/yulilevtov/Dropbox/RM/Resources/Software/nacl_sdk
 # NACL_TARGET_PLATFORM is really the name of a folder with the base dir -
 # usually NACL_SDK_ROOT - within which the toolchain for the target platform
 # are found.

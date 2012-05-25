@@ -1,0 +1,13 @@
+#N canvas 69 105 1024 684 8;
+#X text 339 45 A Juno/Jupiter style analogue voice engine for 80s style
+synthesiser sounds \, ajf 2010;
+#X obj 547 609 *~ 0.5;
+#X obj 547 586 osc~ 440;
+#X obj 379 660 dac~;
+#X text 405 14 Z G N A C L;
+#X text 488 15 Z G N A C L;
+#X text 572 15 Z G N A C L;
+#X text 655 16 Z G N A C L;
+#X connect 1 0 3 0;
+#X connect 1 0 3 1;
+#X connect 2 0 1 0;

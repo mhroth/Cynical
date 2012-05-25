@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cynical - Earthquake</title>
+  <style>
+  	#parent {  
+		width: 1200px;
+		text-align: center;  
+		font-size: 0px;  
+		letter-spacing: 0px;  
+		white-space: nowrap;  
+		line-height: 0px;  
+		overflow: hidden;  
+	}  
+  
+	.child {
+		display: inline-block;  
+		vertical-align: middle;  
+	}
+	
+	h2 {
+		color:white;
+		font-family:arial,sans-serif;
+	}
+	</style>
+  <script type="text/javascript">
+    ZgnaclModule = null;  // Global application object.
+
+    var loadPdPatch = function(url, callback){
+        var args = Array.prototype.slice.call(arguments, 2);
+        var loader = new XMLHttpRequest();
+        var onLoad = function(e){
+    	console.log(e);
+        };
+        loader.onreadystatechange = function(e){
+    	if (e.target.readyState == 4) {
+    	    callback.apply(callback, arguments);
+    	}
+        };
+        loader.open("GET", url, false);
+        loader.send(null);
+    };
+    
+    function onPdPatchLoad(evt) {
+        console.log(evt);
+        ZgnaclModule.postMessage("newGraph: " + evt.target.responseText);
+        ZgnaclModule.postMessage('playSound');
+    }
+
+    // When the NaCl module has loaded, hook up an event listener to handle
+    // messages coming from it via PPB_Messaging.PostMessage() (in C) or
+    // pp::Instance.PostMessage() (in C++), and indicate success.
+    function moduleDidLoad() {
+      ZgnaclModule = document.getElementById('zgnacl');
+      ZgnaclModule.addEventListener('message', handleMessage, false);
+      loadPdPatch("./osc.pd", onPdPatchLoad);
+      updateStatus('Click and drag in the grey space on the right');
+      
+      // 
+      document.getElementById('mouseArea').addEventListener('mousemove', sendMouseToZG, true); 
+      document.getElementById('mouseArea').addEventListener('mousedown', sendMouseDownToZG, true);
+      document.addEventListener('mouseup', sendMouseDownToZG, true);
+     // document.getElementById('mouseArea').addEventListener('click', function(e){console.log(e);}, true);
+    }
+    
+    function sendMouseToZG(e) {
+       console.log(e.x, e.y);
+       var stringToPost = "sendMessage:mouseY:0.0:"+ e.y;
+       ZgnaclModule.postMessage(stringToPost);
+       var stringToPost = "sendMessage:mouseX:0.0:"+ e.x;
+       ZgnaclModule.postMessage(stringToPost);
+    }
+    
+    function sendMouseDownToZG(m) {
+       console.log(m.type);
+       if (m.type == 'mousedown') {
+       	var stringToPost = "sendMessage:mouseDown:0.0:1";
+       }else{
+       	var stringToPost = "sendMessage:mouseDown:0.0:0";
+       }
+       ZgnaclModule.postMessage(stringToPost);
+       console.log('Sending: '+ stringToPost);
+    }
+
+    // The 'message' event handler.  This handler is fired when the NaCl module
+    // posts a message to the browser by calling PPB_Messaging.PostMessage()
+    // (in C) or pp::Instance.PostMessage() (in C++).  This implementation
+    // simply displays the content of the message in an alert panel.
+    function handleMessage(message_event) {
+      //alert(message_event.data);
+    }
+    
+    function pageDidLoad() {
+      if (ZgnaclModule == null) {
+        updateStatus('Loading synth... (may take up to a minute)');
+      } else {
+        // It's possible that the Native Client module onload event fired
+        // before the page's onload event.  In this case, the status message
+        // will reflect 'SUCCESS', but won't be displayed.  This call will
+        // display the current message.
+        updateStatus();
+      }
+    }
+
+    // Set the global status message.  If the element with id 'statusField'
+    // exists, then set its HTML to the status message as well.
+    // opt_message The message test.  If this is null or undefined, then
+    // attempt to set the element with id 'statusField' to the value of
+    // |statusText|.
+    function updateStatus(opt_message) {
+      if (opt_message)
+        statusText = opt_message;
+      var statusField = document.getElementById('status_field');
+      if (statusField) {
+        statusField.innerHTML = statusText;
+      }
+    }
+    
+    
+    function toggleSound(flag) {
+      if (flag) {
+        ZgnaclModule.postMessage('playSound');
+      } else {
+        ZgnaclModule.postMessage('stopSound');
+      }
+    }
+    
+    
+  </script>
+</head>
+<body style="background: url('http://static.tumblr.com/jhhfv1l/UA5lqp7o2/sky.jpg') fixed; width:98%;">
+<!--
+<button onclick="toggleSound(true)">Play</button>
+<button onclick="toggleSound(false)">Stop</button>
+-->
+  <div id="listener">
+    <script type="text/javascript">
+       document.getElementById('listener').addEventListener('load', moduleDidLoad, true);
+    </script>
+
+    <embed name="nacl_module"
+       id="zgnacl"
+       width=0 height=0
+       src="zgnacl.nmf"
+       type="application/x-nacl" />
+  </div>
+  </br>
+	<center>
+	  <h2 id="status_field">Loading synth... (may take up to a minute)</h2>
+	<center>
+  </br>
+	<div style="width: 1200px; margin: 0 auto 0 auto;">
+		<div id="parent">
+		  <div class="child">
+			<iframe width="853" height="480" src="http://www.youtube.com/embed/u0fk6syQ7iY?autoplay=1" frameborder="0" allowfullscreen></iframe>
+		  </div>
+		  <div class="child" id="mouseArea" style="background-color:rgb(128,128,128); opacity:0.4; width:200px; height:480px;">
+		  </div>
+		</div>
+	</div>
+  	<div style="position:absolute; bottom:5px;">
+  		<img src="http://reactifymusic.com/Cynical-Lab/chrome-trans.png">
+  	</div>
+</body>
+</html>
