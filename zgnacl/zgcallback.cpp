@@ -23,12 +23,11 @@
 #include "zgcallback.h"
 #include "ppapi/cpp/completion_callback.h"
 
-#define PIPE_READER_INTERVAL_MS (1000/20) // read pipe 20 times per second
-
 void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr) {
   ZgnaclInstance *zgnacl = reinterpret_cast<ZgnaclInstance *>(userData);
   switch (function) {
     case ZG_PRINT_STD: {
+      // write the message into the pipe
       size_t ptrLen = strlen((const char *) ptr);
       char buffer[sizeof(function)+ptrLen+1];
       *((ZGCallbackFunction *) buffer) = function;
@@ -57,6 +56,26 @@ void *zgCallbackFunction(ZGCallbackFunction function, void *userData, void *ptr)
       zgnacl->getPipe()->write(sizeof(buffer), buffer);
       free(messageString);
       break;
+    }
+    ZG_FILE_EXISTS: {
+      // for the current implementation, it is assumed that this callback is being made while
+      // already on the main thread.
+      string filepath = string((const char *) ptr);
+      string fileString = zgnacl->getFilesystem()[filepath];
+      return (fileString.size() > 0) ? (void *) 1 : NULL;
+    }
+    ZG_READ_FILE: {
+      // for the current implementation, it is assumed that this callback is being made while
+      // already on the main thread.
+      string filepath = string((const char *) ptr);
+      string fileString = zgnacl->getFilesystem()[filepath];
+      if (fileString.size() > 0) {
+        char *str = (char *) malloc((fileString.size()+1) * sizeof(char));
+        strncpy(str, fileString.c_str(), fileString.size()+1);
+        return str;
+      } else {
+        return NULL;
+      }
     }
     default: {
       char buffer[sizeof(function)+snprintf(NULL, 0,

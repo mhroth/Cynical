@@ -21,6 +21,7 @@
 
 #include "ZgnaclInstance.h"
 #include "zgcallback.h"
+#include "geturl_handler.h"
 
 #define kPlaySoundId "playSound"
 #define kStopSoundId "stopSound"
@@ -29,9 +30,10 @@
 bool ZgnaclInstance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
   
   // Ask the device for an appropriate block size, with a default of 512
-  blockSize_ = pp::AudioConfig::RecommendSampleFrameCount(PP_AUDIOSAMPLERATE_44100, 512);
-  audio_ = pp::Audio(this, pp::AudioConfig(this, PP_AUDIOSAMPLERATE_44100, blockSize_),
-      audioCallback, this);
+  blockSize_ = pp::AudioConfig::RecommendSampleFrameCount(this, PP_AUDIOSAMPLERATE_44100, 512);
+  pp::AudioConfig config(this, PP_AUDIOSAMPLERATE_44100, blockSize_);
+  if (config.is_null()) return false;
+  audio_ = pp::Audio(this, config, audioCallback, this);
   
   // create the ZGContext with 0 input and 2 output channels
   zgContext_ = zg_context_new(0, 2, blockSize_, 44100.0f, zgCallbackFunction, this);
@@ -80,6 +82,25 @@ void ZgnaclInstance::HandleMessage(const pp::Var& var_message) {
         } else {
           PostMessage(pp::Var("Graph could not be created. Reason unknown."));
         }
+      } else if (!message.compare(0, pos, "loadGraph")) {
+        // clear the file system and start over
+        // each line of the rjm becomes a key in the filesystem
+        filesystem_.clear();
+        
+        string rjmUrl = message.substr(pos+1, string::npos);
+        // TODO(mhroth): load the rjm file
+        // read and load all entried of the rjm into the filesystem
+        GetURLHandler* handler = GetURLHandler::Create(this, rjmUrl);
+        if (handler != NULL) {
+          handler->Start();
+        } else {
+          // TODO
+        }
+        
+        
+        
+        // on filesystem loaded
+        //zg_context_new_graph_from_string(zgContext_, filesystem_["_main.pd"]);
       } else if (!message.compare(0, pos, "sendMessage")) {
         // receiver:timestamp:arguments
         // "recName:0.0:0 0"

@@ -23,6 +23,7 @@
 #define _ZGNACL_INSTANCE_H_
 
 #include <cstdio>
+#include <map>
 #include <string>
 #include <string.h>
 #include "ppapi/cpp/audio.h"
@@ -88,6 +89,8 @@ public:
   
   unsigned int getPipeReadInterval() const { return pipeReadIntervalMs; }
   
+  map<string,string> getFilesystem() const { return filesystem_; }
+  
 private:
   static void audioCallback(void *samples, uint32_t buffer_size, void *data);
   
@@ -101,6 +104,8 @@ private:
   LightPipe *pipe_;
   
   unsigned int pipeReadIntervalMs;
+  
+  map<string,string> filesystem_;
 };
 
 #endif // _ZGNACL_INSTANCE_H_
