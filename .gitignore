@@ -8,3 +8,5 @@ dbg_x86_64/
 *.nmf
 Cynical/
 zgnacl/Cynical/Cynical.xcodeproj/project.pbxproj
+zgnacl/glibc
+zgnacl/newlib
