@@ -7,6 +7,8 @@
 #   http://www.gnu.org/software/make/manual/make.html
 #
 
+# setenv NACL_SDK_ROOT /Users/mhroth/workspace/nacl_sdk/pepper_21/
+
 include ../ZenGarden/src/Makefile.sourcefiles
 VPATH = ../ZenGarden/src
 
@@ -36,7 +38,7 @@ TOOLCHAIN?=newlib
 
 ZENGARDEN_SRC_FILEs:=$(LOCAL_SRC_FILES) # LOCAL_SRC_FILES comes from the ZenGarden Makefile.sourcefiles
 GETURL_CXX:=ZgnaclInstance.cpp LightPipe.cpp zgcallback.cpp geturl_handler.cpp $(LOCAL_SRC_FILES)
-GETURL_CXXFLAGS:=-I../ZenGarden/src -D__APPLE__=0 -msse -mfpmath=sse -ffast-math -w $(NACL_CXXFLAGS)
+GETURL_CXXFLAGS:=-I../ZenGarden/src -D__APPLE__=0 -msse4.1 -mfpmath=sse -ffast-math -w $(NACL_CXXFLAGS)
 GETURL_LDFLAGS:=$(NACL_LDFLAGS)
 
 

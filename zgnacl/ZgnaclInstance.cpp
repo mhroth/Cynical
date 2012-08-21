@@ -27,13 +27,15 @@
 #define kStopSoundId "stopSound"
 #define kMessageArgumentSeparator ':'
 
+#define DEFAULT_BLOCK_SIZE 512
+
 bool ZgnaclInstance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
   
   // Ask the device for an appropriate block size, with a default of 512
-  blockSize_ = pp::AudioConfig::RecommendSampleFrameCount(this, PP_AUDIOSAMPLERATE_44100, 512);
-  pp::AudioConfig config(this, PP_AUDIOSAMPLERATE_44100, blockSize_);
-  if (config.is_null()) return false;
-  audio_ = pp::Audio(this, config, audioCallback, this);
+  blockSize_ = pp::AudioConfig::RecommendSampleFrameCount(
+      this, PP_AUDIOSAMPLERATE_44100, DEFAULT_BLOCK_SIZE);
+  audio_ = pp::Audio(this, pp::AudioConfig(this, PP_AUDIOSAMPLERATE_44100, blockSize_),
+      audioCallback, this);
   
   // create the ZGContext with 0 input and 2 output channels
   zgContext_ = zg_context_new(0, 2, blockSize_, 44100.0f, zgCallbackFunction, this);
